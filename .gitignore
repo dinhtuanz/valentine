@@ -1,0 +1,6 @@
+# File hệ thống
+.DS_Store
+Thumbs.db
+
+# Cấu hình editor (nếu dùng VS Code)
+.vscode/

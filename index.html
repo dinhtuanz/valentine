@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Valentine's Day!</title>
+    <!-- Import phông chữ lãng mạn từ Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Thư viện hiệu ứng pháo hoa giấy -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* --- CSS Styles --- */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden; /* Ngăn thanh cuộn khi trái tim bay */
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            position: relative;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            color: #ff4d6d;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            color: #555;
+            min-height: 60px; /* Giữ chỗ cho text */
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .btn-love {
+            background-color: #ff4d6d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4);
+            outline: none;
+        }
+
+        .btn-love:hover {
+            background-color: #d63353;
+            transform: scale(1.05);
+        }
+
+        .btn-love:active {
+            transform: scale(0.95);
+        }
+
+        /* Hiệu ứng trái tim bay nền */
+        .heart {
+            position: absolute;
+            top: -10px;
+            color: #ff4d6d;
+            font-size: 20px;
+            animation: fall linear forwards;
+            z-index: 1;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(105vh) rotate(360deg);
+            }
+        }
+
+        /* Trái tim đập ở tiêu đề */
+        .heart-beat {
+            color: red;
+            animation: heartbeat 1.2s infinite;
+            display: inline-block;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            40% { transform: scale(1); }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- CSS cho hiệu ứng 3D --- */
+        #world {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            perspective: 1000px;
+            display: none; /* Ẩn mặc định */
+            z-index: 100;
+            pointer-events: none; /* Để chuột vẫn tương tác được với nền nếu cần */
+        }
+
+        #scene-3d {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            transform-style: preserve-3d;
+        }
+
+        .floating-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            font-family: 'Dancing Script', cursive;
+            font-weight: bold;
+            white-space: nowrap;
+            user-select: none;
+            pointer-events: auto; /* Cho phép chuột tương tác với chữ */
+        }
+
+        .photo-3d {
+            position: absolute;
+            width: 150px; /* Kích thước ảnh */
+            height: auto;
+            border: 5px solid white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 77, 109, 0.8);
+            user-select: none;
+            pointer-events: auto; /* Cho phép chuột tương tác với ảnh */
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* --- Hiệu ứng khi tìm thấy từ khóa --- */
+        @keyframes found-anim {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(2) rotate(-10deg); }
+            70% { transform: scale(2) rotate(10deg); }
+            100% { transform: scale(1.5) rotate(0deg); }
+        }
+
+        .found-label {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 30px;
+            color: #fff;
+            text-shadow: 0 0 20px #ff0000;
+            white-space: nowrap;
+            animation: floatUp 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; top: -50px; }
+            100% { opacity: 0; top: -150px; }
+        }
+
+        /* --- Đốm sáng --- */
+        .light-spot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #fff, 0 0 40px #ff00de;
+            pointer-events: none;
+        }
+
+        /* --- Header ẩn hiện chữ --- */
+        #top-header {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: none; /* Hiện khi vào chế độ 3D */
+            gap: 15px; /* Khoảng cách gần hơn để vừa màn hình điện thoại */
+            width: 100%;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .header-word {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2rem; /* Cỡ chữ nhỏ hơn */
+            color: #c00000; /* Màu đỏ đậm */
+            opacity: 0.3; /* Mờ và nhòe để tạo cảm giác bí ẩn */
+            filter: blur(2px);
+            transition: all 0.5s ease-out;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+        .header-word.show {
+            opacity: 1;
+            filter: blur(0);
+            transform: scale(1.1);
+            color: #ff0000; /* Màu sáng rực rỡ khi hiện */
+            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff4d6d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Happy Valentine <span class="heart-beat">❤</span></h1>
+        <!-- Nơi hiển thị lời chúc -->
+        <p class="message" id="typing-text"></p>
+        
+        <button class="btn-love" onclick="showMission()">Nhấn vào đây </button>
+    </div>
+
+    <!-- Header chứa chữ ẩn -->
+    <div id="top-header">
+        <span id="h-hamy" class="header-word"> Hạ My </span>
+        <span id="h-yeu" class="header-word"> Yêu </span>
+        <span id="h-dinhtuan" class="header-word"> Đình Tuấn </span>
+    </div>
+
+    <!-- Container cho hiệu ứng 3D -->
+    <div id="world">
+        <div id="scene-3d"></div>
+    </div>
+
+    <script>
+        /* --- JavaScript Logic --- */
+        
+        // 1. Cấu hình lời chúc (Bạn hãy sửa nội dung ở đây)
+        const message = "Gửi Hạ My yêu dấu. Cảm ơn em đã chọn ở lại bên anh. Chúc cô gái của anh ngày Valentine thật rực rỡ nhé. Yêu nhớ Hạ My nhiều lắmmm !";
+        const speed = 50; // Tốc độ gõ chữ (ms)
+        let i = 0;
+
+        // 2. Hiệu ứng gõ chữ
+        function typeWriter() {
+            if (i < message.length) {
+                document.getElementById("typing-text").innerHTML += message.charAt(i);
+                i++;
+                setTimeout(typeWriter, speed);
+            }
+        }
+
+        // Chạy hiệu ứng gõ chữ khi tải trang
+        window.onload = typeWriter;
+
+        // 3. Hàm tạo mưa trái tim
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = '❤';
+            
+            // Vị trí ngẫu nhiên theo chiều ngang
+            heart.style.left = Math.random() * 100 + 'vw';
+            
+            // Kích thước ngẫu nhiên
+            heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+            
+            // Thời gian rơi ngẫu nhiên (từ 2s đến 5s)
+            heart.style.animationDuration = Math.random() * 3 + 2 + 's';
+            
+            document.body.appendChild(heart);
+
+            // Xóa trái tim sau khi rơi xong để nhẹ máy
+            setTimeout(() => {
+                heart.remove();
+            }, 5000);
+        }
+
+        // Tạo trái tim liên tục mỗi 300ms
+        setInterval(createHeart, 300); // Giảm tốc độ để đỡ lag
+
+        // 4. Hiển thị nhiệm vụ trước khi vào game
+        function showMission() {
+            i = message.length; // Dừng hiệu ứng gõ chữ nếu đang chạy
+            document.getElementById("typing-text").innerHTML = 
+                "Nhiệm vụ: Em hãy tìm 3 từ khóa <b>'Hạ My'</b>, <b>'Yêu'</b>, <b>'Đình Tuấn'</b> đang bay lơ lửng để mở khóa món quà bí mật nhé!<br><br>(Gợi ý: Giữ chuột trái để xoay, lăn chuột để phóng to)";
+            
+            const btn = document.querySelector('.btn-love');
+            btn.innerText = "Bắt đầu ngay!";
+            btn.onclick = celebrate;
+        }
+
+        // 5. Sự kiện khi bấm nút (Vào màn hình 3D)
+        function celebrate() {
+            // Ẩn thiệp cũ đi để hiện không gian 3D (hoặc giữ lại tùy bạn, ở đây mình ẩn đi cho đẹp)
+            const card = document.querySelector('.card');
+            card.style.transition = "opacity 1s";
+            card.style.opacity = "0";
+            setTimeout(() => card.style.display = "none", 1000);
+
+            // Hiện khung cảnh 3D
+            const world = document.getElementById('world');
+            world.style.display = 'block';
+            
+            // Hiện thanh header (các chữ bên trong vẫn mờ)
+            document.getElementById('top-header').style.display = 'flex';
+            
+            init3DText();
+
+            // Hiệu ứng nổ Confetti (Hạt màu trắng, hồng, đỏ)
+            const duration = 3000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#ffffff', '#ffc0cb', '#ff0000'] // Trắng, Hồng, Đỏ
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#ffffff', '#ffc0cb', '#ff0000']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        // 5. Logic xử lý chữ 3D
+        function init3DText() {
+            const scene = document.getElementById('scene-3d');
+            // 10 từ tương ứng với 10 ảnh (anh1.jpg -> anh10.jpg)
+            const words = ["I Love You", "Happy Valentine", "Forever", "Hạnh Phúc", "Xinh Đẹp", "Ngọt Ngào", "Bên Nhau", "Thương Nhớ", "Vui Vẻ", "Cùng Nhau"];
+            const colors = ["#ff4d6d", "#ff0000", "#ffffff", "#ff9a9e"];
+            
+            // 1. Tạo 250 từ bay lơ lửng (Tăng số lượng theo yêu cầu)
+            for (let i = 0; i < 250; i++) {
+                const el = document.createElement('div');
+                el.classList.add('floating-text');
+                
+                // Tạo phần tử con để chứa chữ và hiệu ứng nhấp nháy (tránh ghi đè transform vị trí)
+                const content = document.createElement('span');
+                const wordIndex = Math.floor(Math.random() * words.length); // Chọn ngẫu nhiên 1 trong 10 loại từ
+                content.innerText = words[wordIndex];
+                content.style.display = "inline-block";
+                content.style.animation = `blink ${Math.random() * 2 + 1}s infinite ease-in-out`;
+                el.appendChild(content);
+
+                el.style.color = colors[Math.floor(Math.random() * colors.length)];
+                el.style.fontSize = Math.random() * 40 + 30 + 'px'; // Tăng kích thước chữ (30px - 70px)
+                
+                // Vị trí ngẫu nhiên rộng hơn để tránh trùng lặp
+                const x = (Math.random() - 0.5) * 3000; 
+                const y = (Math.random() - 0.5) * 1500; 
+                const z = (Math.random() - 0.5) * 3000; 
+                
+                el.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
+                el.dataset.x = x;
+                el.dataset.y = y;
+                el.dataset.z = z;
+                el.dataset.index = wordIndex; // Lưu lại loại từ (0-9) để sau này đổi thành ảnh tương ứng
+                scene.appendChild(el);
+            }
+
+            // 2. Thêm 3 từ khóa đặc biệt: Hạ My, Yêu, Đình Tuấn (Số lượng 1, kích thước rất to)
+            const specialWords = ["Hạ My", "Yêu", "Đình Tuấn"];
+            let collectedCount = 0; // Biến đếm số từ đã tìm thấy
+
+            specialWords.forEach(word => {
+                const el = document.createElement('div');
+                el.classList.add('floating-text');
+                el.classList.add('special-word'); // Đánh dấu từ khóa đặc biệt
+                
+                const content = document.createElement('span');
+                content.innerText = word;
+                content.style.display = "inline-block";
+                content.style.animation = `blink ${Math.random() * 2 + 1}s infinite ease-in-out`;
+                el.appendChild(content);
+
+                el.style.color = "#ffffff"; // Màu trắng ban đầu
+                el.style.fontSize = "100px"; // Kích thước rất lớn
+                el.style.textShadow = "0 0 30px rgba(255, 77, 109, 1)"; // Hiệu ứng phát sáng mạnh
+                el.style.zIndex = "1000"; // Luôn nổi lên trên
+                el.style.cursor = "pointer"; // Con trỏ chuột biến thành bàn tay
+
+                // Sự kiện khi bấm vào từ khóa
+                el.onclick = function() {
+                    if (this.style.color !== "rgb(255, 0, 0)" && this.style.color !== "#ff0000") {
+                        this.style.color = "#ff0000"; // Chuyển sang màu đỏ
+                        this.style.textShadow = "0 0 50px #ff0000"; // Sáng rực lên
+                        
+                        // 1. Kích hoạt hiệu ứng nảy và rung cho chữ
+                        const span = this.querySelector('span');
+                        span.style.animation = "found-anim 1s forwards";
+
+                        // 2. Hiện thông báo "Đã tìm thấy" bay lên
+                        const label = document.createElement('div');
+                        label.classList.add('found-label');
+                        label.innerText = "❤ Đã tìm thấy!";
+                        this.appendChild(label);
+
+                        // 3. Hiện chữ tương ứng trên header
+                        if (word === "Hạ My") document.getElementById('h-hamy').classList.add('show');
+                        if (word === "Yêu") document.getElementById('h-yeu').classList.add('show');
+                        if (word === "Đình Tuấn") document.getElementById('h-dinhtuan').classList.add('show');
+
+                        collectedCount++;
+                        
+                        // Hiệu ứng nổ nhỏ khi tìm thấy 1 từ
+                        confetti({
+                            particleCount: 50,
+                            spread: 60,
+                            origin: { y: 0.6 },
+                            colors: ['#ff0000']
+                        });
+
+                        // Kiểm tra nếu đã tìm đủ 3 từ
+                        if (collectedCount === 3) {
+                            triggerFinalMoment();
+                        }
+                    }
+                };
+
+                // Vị trí ngẫu nhiên xa hơn để khó tìm hơn
+                const x = (Math.random() - 0.5) * 4000; 
+                const y = (Math.random() - 0.5) * 2000; 
+                const z = (Math.random() - 0.5) * 4000;
+
+                el.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
+                scene.appendChild(el);
+            });
+
+            // Hàm kích hoạt hiệu ứng cuối cùng
+            function triggerFinalMoment() {
+                const photos = [
+                    "anh1.jpg", "anh2.jpg", "anh3.jpg", "anh4.jpg", "anh5.jpg",
+                    "anh6.jpg", "anh7.jpg", "anh8.jpg", "anh9.jpg", "anh10.jpg"
+                ];
+
+                // 0. Xử lý các chữ nền: Biến đổi TẤT CẢ các chữ thành ảnh tương ứng
+                const allTexts = document.querySelectorAll('.floating-text:not(.special-word)');
+
+                allTexts.forEach((el) => {
+                    const imgIndex = parseInt(el.dataset.index); // Lấy loại từ đã lưu
+                    
+                    if (!isNaN(imgIndex) && imgIndex < photos.length) {
+                        // Tạo wrapper để giữ vị trí (tránh bị animation ghi đè transform)
+                        const wrapper = document.createElement('div');
+                        wrapper.style.position = 'absolute';
+                        wrapper.style.top = '0';
+                        wrapper.style.left = '0';
+
+                        // Lấy vị trí của chữ cũ
+                        const x = el.dataset.x;
+                        const y = el.dataset.y;
+                        const z = el.dataset.z;
+                        
+                        wrapper.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
+                        scene.appendChild(wrapper);
+
+                        // Tạo ảnh bên trong wrapper
+                        const img = document.createElement('img');
+                        img.src = photos[imgIndex]; // Dùng ảnh tương ứng với loại chữ
+                        img.classList.add('photo-3d');
+                        img.style.position = 'relative'; // Override position absolute của class
+                        img.style.opacity = "0"; // Bắt đầu ẩn
+                        img.style.transition = "opacity 1s";
+                        img.style.animation = `blink ${Math.random() * 2 + 2}s infinite ease-in-out`;
+                        
+                        wrapper.appendChild(img);
+                        
+                        // Hiện ảnh dần lên
+                        setTimeout(() => img.style.opacity = "1", 100);
+                        
+                        // Ẩn chữ đi
+                        el.style.transition = "opacity 1s";
+                        el.style.opacity = "0";
+                        setTimeout(() => el.remove(), 1000);
+                    }
+                });
+
+                // 1. Hiệu ứng pháo hoa giấy liên tục (Đỏ và Trắng)
+                const duration = 5000;
+                const end = Date.now() + duration;
+
+                (function frame() {
+                    confetti({
+                        particleCount: 10,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: ['#ffffff', '#ff0000']
+                    });
+                    confetti({
+                        particleCount: 10,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: ['#ffffff', '#ff0000']
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+
+                // 3. Thêm các đốm sáng bay lơ lửng
+                for (let i = 0; i < 100; i++) {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.position = 'absolute';
+                    wrapper.style.top = '0';
+                    wrapper.style.left = '0';
+
+                    const x = (Math.random() - 0.5) * 4000;
+                    const y = (Math.random() - 0.5) * 2000;
+                    const z = (Math.random() - 0.5) * 4000;
+                    
+                    wrapper.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
+                    scene.appendChild(wrapper);
+
+                    const spot = document.createElement('div');
+                    spot.classList.add('light-spot');
+                    spot.style.position = 'relative'; // Override position absolute
+                    spot.style.animation = `blink ${Math.random() * 3 + 2}s infinite ease-in-out`;
+                    wrapper.appendChild(spot);
+                }
+            }
+
+            // Các biến điều khiển camera
+            let isDraggingLeft = false;
+            let isDraggingRight = false;
+            let startX, startY;
+            let rotateX = 0, rotateY = 0;
+            let translateX = 0, translateY = 0;
+            let translateZ = 0;
+            
+            // Biến đệm để chuyển động mượt hơn
+            let targetRotateX = 0, targetRotateY = 0;
+            let targetTranslateX = 0, targetTranslateY = 0, targetTranslateZ = 0;
+
+            // Ngăn menu chuột phải
+            document.addEventListener('contextmenu', e => e.preventDefault());
+
+            document.addEventListener('mousedown', (e) => {
+                if (e.button === 0) isDraggingLeft = true;
+                if (e.button === 2) isDraggingRight = true;
+                startX = e.clientX;
+                startY = e.clientY;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDraggingLeft = false;
+                isDraggingRight = false;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDraggingLeft && !isDraggingRight) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+
+                if (isDraggingLeft) { translateX += deltaX; translateY += deltaY; }
+                if (isDraggingRight) { rotateY += deltaX * 0.5; rotateX -= deltaY * 0.5; }
+
+                startX = e.clientX;
+                startY = e.clientY;
+            });
+
+            // Sự kiện lăn chuột (chuột giữa) để phóng to/thu nhỏ
+            document.addEventListener('wheel', (e) => {
+                translateZ += e.deltaY * -2; // Tăng tốc độ zoom
+            });
+
+            // Vòng lặp render (Game Loop) để chuyển động siêu mượt
+            function animate() {
+                // Hiệu ứng quán tính (Lerp)
+                targetRotateX += (rotateX - targetRotateX) * 0.1;
+                targetRotateY += (rotateY - targetRotateY) * 0.1;
+                targetTranslateX += (translateX - targetTranslateX) * 0.1;
+                targetTranslateY += (translateY - targetTranslateY) * 0.1;
+                targetTranslateZ += (translateZ - targetTranslateZ) * 0.1;
+
+                scene.style.transform = `translate3d(${targetTranslateX}px, ${targetTranslateY}px, ${targetTranslateZ}px) rotateX(${targetRotateX}deg) rotateY(${targetRotateY}deg)`;
+                
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>
